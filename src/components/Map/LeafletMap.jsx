@@ -3,6 +3,8 @@ import {
   // Rectangle,
   TileLayer,
   Marker,
+  //added popup from leaflet
+  Popup,
   useMap
 } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
@@ -43,7 +45,32 @@ const convertBounds = ([w, s, e, n]) => [
   [n, e]
 ];
 
-const LeafletMarker = ({ lat, lon }) => <Marker position={[lat, lon]} />;
+//New leaflet marker component that adds information to map points
+const LeafletMarker = ({
+  lat,
+  lon,
+  name,
+  address,
+  phoneNumber
+}) => (
+  <Marker position={[lat, lon]}>
+    <Popup>
+      <strong>{name || "Cinema"}</strong>
+
+      {address && (
+        <p style={{ margin: "6px 0" }}>
+          {address}
+        </p>
+      )}
+
+      {phoneNumber && (
+        <a href={`tel:${phoneNumber}`}>
+          {phoneNumber}
+        </a>
+      )}
+    </Popup>
+  </Marker>
+);
 
 const LeafletMap = ({ children }) => {
   console.log("render Leaflet map");
@@ -51,6 +78,9 @@ const LeafletMap = ({ children }) => {
     <>
       <MapContainer
         bounds={convertBounds(totalBounds)}
+        //added maxbounds and viscosity for restricting map to australia and new zealand
+        maxBounds={convertBounds(totalBounds)}
+        maxBoundsViscosity={1}
         style={{ height: "100%", backgroundColor: "#99b3cc" }}
         zoomSnap={0.5}
         zoomDelta={0.5}

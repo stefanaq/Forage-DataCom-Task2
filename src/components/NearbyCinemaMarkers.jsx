@@ -6,9 +6,17 @@ const NearbyCinemaMarkers = () => {
   const { cinemas } = useNearbyCinemas();
 
   return cinemas.map((cinema, idx) => {
-    return (
-      <Marker lat={cinema.lat} lon={cinema.lng} key={idx} />
-    )
+return (
+  // New cinema marker
+  <Marker
+    lat={cinema.lat}
+    lon={cinema.lng}
+    name={cinema.name}
+    address={cinema.address}
+    phoneNumber={cinema.phoneNumber}
+    key={`${cinema.countryCode}-${cinema.name}-${idx}`}
+  />
+);
   })
 };
 
