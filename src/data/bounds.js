@@ -9,11 +9,10 @@ export const allCountryBounds = Object.values(countryBounds);
 // latitude is West (-) to East (+)
 // longitude is North (+) to South (-)
 
-export const totalBounds = allCountryBounds.reduce(
-  ([w1, s1, e1, n1], [w2, s2, e2, n2]) => ([
-    Math.min(w1, w2),
-    Math.min(s1, s2),
-    Math.max(e1, e2),
-    Math.max(n1, n2),
-  ])
-)
+//changed bounds calculation to make more space
+export const totalBounds = [
+  107,   // more room west of Australia
+  -52,   // more room south of NZ
+  179.9, // room east of NZ, staying below 180°
+  -6,    // more room north of Australia
+];

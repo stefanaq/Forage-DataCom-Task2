@@ -1,9 +1,10 @@
 import 'maplibre-gl/dist/maplibre-gl.css';
 //added popup to maplibre import
 import Map, { Marker, Popup, useMap } from 'react-map-gl';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 // eslint-disable-next-line import/no-webpack-loader-syntax
 import maplibregl from 'maplibre-gl';
+
 import useEventListener from '@use-it/event-listener';
 import { useSnackbar } from 'notistack';
 import { MapContextProvider } from './context';
@@ -12,6 +13,7 @@ import maplibreglWorker from "maplibre-gl/dist/maplibre-gl-csp-worker";
 maplibregl.workerClass = maplibreglWorker;
 
 //new maplibre marker component
+
 const MaplibreMarker = ({
   lat,
   lon,
@@ -20,6 +22,61 @@ const MaplibreMarker = ({
   phoneNumber
 }) => {
   const [popupOpen, setPopupOpen] = useState(false);
+  const map = useMap().current;
+
+  useEffect(() => {
+    const handleMarkerSelected = (event) => {
+      setPopupOpen(event.detail.id === `${lat},${lon}`);
+    };
+
+    const handleClosePopups = () => {
+      setPopupOpen(false);
+    };
+
+    window.addEventListener(
+      "cinema.markerSelected",
+      handleMarkerSelected
+    );
+
+    window.addEventListener(
+      "cinema.closePopups",
+      handleClosePopups
+    );
+
+    return () => {
+      window.removeEventListener(
+        "cinema.markerSelected",
+        handleMarkerSelected
+      );
+
+      window.removeEventListener(
+        "cinema.closePopups",
+        handleClosePopups
+      );
+    };
+  }, [lat, lon]);
+
+  const handleMarkerClick = (event) => {
+    event.stopPropagation();
+
+    window.dispatchEvent(
+      new Event("cinema.closePopups")
+    );
+
+    window.dispatchEvent(
+      new CustomEvent("cinema.markerSelected", {
+        detail: { id: `${lat},${lon}` }
+      })
+    );
+
+    map?.flyTo({
+      center: [lon, lat],
+      duration: 600,
+      essential: true
+    });
+
+    setPopupOpen(true);
+  };
 
   return (
     <>
@@ -31,10 +88,7 @@ const MaplibreMarker = ({
         <button
           type="button"
           aria-label={`Show details for ${name || "cinema"}`}
-          onClick={(event) => {
-            event.stopPropagation();
-            setPopupOpen(true);
-          }}
+          onClick={handleMarkerClick}
           style={{
             cursor: "pointer",
             border: "none",
@@ -60,11 +114,7 @@ const MaplibreMarker = ({
           <div style={{ maxWidth: "220px" }}>
             <strong>{name || "Cinema"}</strong>
 
-            {address && (
-              <p style={{ margin: "6px 0" }}>
-                {address}
-              </p>
-            )}
+            {address && <p>{address}</p>}
 
             {phoneNumber && (
               <a href={`tel:${phoneNumber}`}>
@@ -77,6 +127,7 @@ const MaplibreMarker = ({
     </>
   );
 };
+
 
 const convertBounds = ([w, s, e, n]) => ([
   // MapLibre expects bounds to be [LngLatBoundsLike](https://maplibre.org/maplibre-gl-js-docs/api/geography/#lnglatboundslike)
@@ -120,6 +171,10 @@ const MaplibreMap = ({ children }) => {
       //added max bounds for restricting map to australia and newzealand
       maxBounds={convertBounds(totalBounds)}
       padding={24}
+      //closing other info leaflets when a new one is clicked
+      onClick={() => {
+        window.dispatchEvent(new Event("cinema.closePopups"));
+      }}
     >
       <MapSnappingEventListener />
       <MapContextProvider value={{ Marker: MaplibreMarker }}>

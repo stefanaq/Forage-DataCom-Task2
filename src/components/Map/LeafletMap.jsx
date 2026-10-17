@@ -7,6 +7,8 @@ import {
   Popup,
   useMap
 } from "react-leaflet";
+
+import { useMapEvents } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import { Icon } from "leaflet";
 import useEventListener from "@use-it/event-listener";
@@ -16,6 +18,19 @@ import MapContext from "./context";
 // Have to override these url's so that it finds the bundles the correct images
 Icon.Default.imagePath =
   "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.3/images/";
+
+//new component for closing leaflets for info when a new one is opened
+const ClosePopupsOnMapClick = () => {
+  useMapEvents({
+    click: () => {
+      window.dispatchEvent(
+        new Event("cinema.closePopups")
+      );
+    },
+  });
+
+  return null;
+};
 
 const MapSnappingEventListener = () => {
   const { enqueueSnackbar } = useSnackbar();
@@ -27,7 +42,7 @@ const MapSnappingEventListener = () => {
 
     try {
       // [Docs](https://leafletjs.com/reference.html#map-flyto)
-      map.flyTo([lat, lng], 14, { duration: 0.5, easeLinearity: 1 });
+      map.flyTo([lat, lng], 14, { duration: 0.6, easeLinearity: 1 });
     } catch (e) {
       console.error(e);
       enqueueSnackbar("Unexpected error while attempting map navigation", {
@@ -84,7 +99,9 @@ const LeafletMap = ({ children }) => {
         style={{ height: "100%", backgroundColor: "#99b3cc" }}
         zoomSnap={0.5}
         zoomDelta={0.5}
+        
       >
+        <ClosePopupsOnMapClick />
         <MapSnappingEventListener />
         <TileLayer
           attribution='Map tiles by <a href="http://stamen.com">Stamen Design</a>, <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -105,3 +122,4 @@ const LeafletMap = ({ children }) => {
   );
 };
 export default LeafletMap;
+
